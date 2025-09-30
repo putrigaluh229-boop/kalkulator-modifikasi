@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kalkulator Mata Uang – Galuh Nely Putri</title>
+<style>
+  :root{
+    --card-bg: rgba(255,255,255,0.92);
+    --text: #ff58ff;
+    --brand: #bcaddf;
+    --btn: #ffe6f7;
+    --btn-hover:#ffd1f1;
+    --accent:#ffb3c6;
+    --shadow: 0 10px 25px rgb(255, 151, 151);
+    --display-bg:#fff;
+  }
+  body.dark{
+    --card-bg: rgba(0, 0, 0, 0.9);
+    --text: #ffffff;
+    --brand: #b68db6;
+    --btn:#5e407a;
+    --btn-hover:#444;
+    --accent:#e76f51;
+    --display-bg:#ffffff;
+    background: linear-gradient(270deg,#524791,#380303,#4d0e28,#000000);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; height:100vh; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; font-family: Arial, sans-serif;
+    color:var(--text);
+    background: linear-gradient(270deg,#dd6080,#e0bbff,#d1eecb,#9bf6ff,#ffc6ff);
+    background-size: 1000% 1000%;
+    animation: bgShift 20s ease infinite;
+    position:relative;
+    transition:.4s background, .4s color;
+  }
+  @keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  .formula{
+    position:absolute; top:-40px; color:rgba(40, 228, 96, 0.2); font-weight:bold;
+    user-select:none; white-space:nowrap; animation: fall linear forwards; pointer-events:none;
+  }
+  @keyframes fall{from{transform:translateY(0);opacity:1;}to{transform:translateY(110vh);opacity:0;}}
+
+  .card{
+    width: 340px; background:var(--card-bg); border-radius:20px; padding:18px;
+    box-shadow: var(--shadow); z-index:10; position:relative;
+    backdrop-filter: blur(6px); transition:.3s;
+  }
+  .title{font-weight:700; font-size:22px; text-align:center; color:var(--brand); margin-bottom:8px;}
+
+  .display{
+    width:98%; height:50px; border:1px solid #000; border-radius:5px; padding:5px 10px;
+    font-size:20px; text-align:right; background:var(--display-bg);
+  }
+  .display.glow{animation: glow 0.8s ease;}
+  @keyframes glow{0%{box-shadow:0 0 0 rgba(255,255,0,0)}50%{box-shadow:0 0 20px rgba(255,255,0,.8)}100%{box-shadow:0 0 0 rgba(255,255,0,0)}}
+
+  .row{display:flex; gap:8px; align-items:center; margin:10px 0}
+  select.currency{flex:1; border:1px solid #ddd; border-radius:10px; padding:8px 10px; background:#fff; font-size:14px;}
+
+  .grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:10px;}
+  button.key{
+    border:none; border-radius:12px; padding:12px 10px; font-size:18px; cursor:pointer;
+    background:var(--btn); color:var(--text);
+  }
+  button.key:hover{ background: var(--btn-hover)}
+  button.key:active{ transform: scale(.95)}
+  .key.wide{ grid-column: span 2}
+  .key.equals{ background:#caffbf}
+  .key.clear{ background:var(--accent)}
+
+  .sub{display:block; font-size:11px; opacity:.7; margin-top:2px}
+
+  .hist-wrap{margin-top:12px}
+  .hist-title{font-weight:700; color:var(--brand); margin-bottom:6px}
+  .history{max-height:140px; overflow:auto; background:rgba(255,255,255,.75); border:1px solid #eee;
+    border-radius:12px; padding:8px; font-size:14px; color:#000;}
+  .hist-row{padding:6px 8px; background:#fff; border-radius:8px; margin-bottom:6px; border:1px solid #f1f1f1}
+  .hist-actions{margin-top:8px; display:flex; gap:8px}
+  .btn{border:none; border-radius:10px; padding:8px 10px; font-size:13px; cursor:pointer; background:#e7e7ff;}
+
+  #toggleMode{position:absolute; top:10px; right:10px; background:#333; color:#fff; border:none;
+    border-radius:50%; width:40px; height:40px; cursor:pointer; font-size:18px; z-index:20;}
+</style>
+</head>
+<body>
+
+<button id="toggleMode">🌙</button>
+
+<div class="card">
+  <div class="title">Galuh Nely Putri</div>
+  <input id="display" class="display" type="text" placeholder="0" readonly />
+
+  <div class="row">
+    <select id="from" class="currency">
+      <option value="USD">USD</option><option value="IDR" selected>IDR</option>
+      <option value="EUR">EUR</option><option value="JPY">JPY</option>
+    </select>
+    <span>→</span>
+    <select id="to" class="currency">
+      <option value="USD">USD</option><option value="IDR">IDR</option>
+      <option value="EUR">EUR</option><option value="JPY" selected>JPY</option>
+    </select>
+  </div>
+
+  <div class="grid">
+    <button class="key" data-val="7">7<span class="sub">tujuh</span></button>
+    <button class="key" data-val="8">8<span class="sub">delapan</span></button>
+    <button class="key" data-val="9">9<span class="sub">sembilan</span></button>
+    <button class="key" data-val="/">÷</button>
+
+    <button class="key" data-val="4">4<span class="sub">empat</span></button>
+    <button class="key" data-val="5">5<span class="sub">lima</span></button>
+    <button class="key" data-val="6">6<span class="sub">enam</span></button>
+    <button class="key" data-val="*">×</button>
+
+    <button class="key" data-val="1">1<span class="sub">satu</span></button>
+    <button class="key" data-val="2">2<span class="sub">dua</span></button>
+    <button class="key" data-val="3">3<span class="sub">tiga</span></button>
+    <button class="key" data-val="-">−</button>
+
+    <button class="key" data-val="0">0<span class="sub">nol</span></button>
+    <button class="key" data-val=".">.</button>
+    <button class="key equals" id="equals">=</button>
+    <button class="key" data-val="+">+</button>
+
+    <button class="key clear wide" id="clear">C</button>
+    <button class="key wide" id="copy">Copy</button>
+    <button class="key wide" id="back">⬅️ Back</button>
+  </div>
+
+  <div class="hist-wrap">
+    <div class="hist-title">Riwayat</div>
+    <div id="history" class="history"></div>
+    <div class="hist-actions">
+      <button class="btn" id="clearHist">Bersihkan</button>
+      <button class="btn" id="exportHist">Export .txt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RATES={USD:1,IDR:15500,EUR:0.92,JPY:157};
+const disp=document.getElementById('display'),grid=document.querySelector('.grid');
+const histBox=document.getElementById('history'); const toggleMode=document.getElementById('toggleMode');
+let expr=""; const history=[];
+
+// mapping angka ke kata
+const numberWords={"0":"nol","1":"satu","2":"dua","3":"tiga","4":"empat","5":"lima","6":"enam","7":"tujuh","8":"delapan","9":"sembilan"};
+
+// mapping operator ke kata
+const operatorWords={"+":"tambah","-":"kurang","*":"kali","/":"bagi",".":"titik"};
+
+function render(){disp.value=expr||"0";}
+function pushHistory(t){history.unshift(t); if(history.length>50)history.pop(); histBox.innerHTML=history.map(h=>`<div class="hist-row">${h}</div>`).join('');}
+
+function speakText(txt){
+  let msg=new SpeechSynthesisUtterance(txt);
+  msg.lang="id-ID";
+  speechSynthesis.speak(msg);
+}
+
+// konversi angka jadi kata (sederhana, ribuan-ratusan)
+function numberToWordsID(n){
+  if(isNaN(n)) return "error";
+  let s="";
+  const formatter=new Intl.NumberFormat("id-ID");
+  s=formatter.format(n);
+  return s;
+}
+
+function calc(){
+  try{
+    let raw=Function('"use strict";return('+expr+')')();
+    let from=document.getElementById('from').value,to=document.getElementById('to').value;
+    let inUSD=raw/(RATES[from]||1);
+    let conv=inUSD*(RATES[to]||1);
+    let line=`${expr} ${from} → ${conv.toFixed(2)} ${to}`;
+    pushHistory(line);
+    expr=conv.toFixed(2);
+    render();
+    disp.classList.add("glow");setTimeout(()=>disp.classList.remove("glow"),800);
+
+    // sebut hasil + mata uang
+    let spoken=numberToWordsID(conv.toFixed(2))+" "+currencyName(to);
+    speakText(spoken);
+
+  }catch(e){
+    expr="Error";render();setTimeout(()=>{expr="";render()},900);
+  }
+}
+
+function currencyName(code){
+  switch(code){
+    case "IDR": return "rupiah";
+    case "USD": return "dolar Amerika";
+    case "EUR": return "euro";
+    case "JPY": return "yen";
+    default: return code;
+  }
+}
+
+function backspace(){expr=expr.slice(0,-1);render();}
+function copy(){navigator.clipboard.writeText(disp.value);}
+
+grid.addEventListener('click',e=>{
+  let t=e.target.closest('button.key');if(!t)return;
+  if(t.id==='equals'){calc();return}
+  if(t.id==='clear'){expr="";render();return}
+  if(t.id==='copy'){copy();return}
+  if(t.id==='back'){backspace();return}
+  let v=t.dataset.val;if(!v)return; expr+=v; render();
+
+  if(/[0-9]/.test(v)){speakText(numberWords[v]);}
+  else if(operatorWords[v]){speakText(operatorWords[v]);}
+});
+
+document.getElementById('clearHist').onclick=()=>{history.length=0;histBox.innerHTML=""}
+document.getElementById('exportHist').onclick=()=>{
+  let blob=new Blob([history.slice().reverse().join('\n')],{type:'text/plain'});
+  let url=URL.createObjectURL(blob);
+  let a=document.createElement('a');a.href=url;a.download="riwayat.txt";a.click();URL.revokeObjectURL(url);
+};
+toggleMode.onclick=()=>{document.body.classList.toggle("dark");toggleMode.textContent=document.body.classList.contains("dark")?"☀️":"🌙";};
+
+// Rumus jatuh
+const FORMULAS=["E=mc²","a²+b²=c²","π≈3.14","∫ f(x) dx","Σ i=1..n","sin²θ+cos²θ=1","Δ=b²-4ac","F=ma","PE=mgh","KE=½mv²"];
+function spawnFormula(){let el=document.createElement('div');el.className='formula';el.textContent=FORMULAS[Math.floor(Math.random()*FORMULAS.length)];el.style.left=Math.random()*100+'vw';el.style.fontSize=(14+Math.random()*22)+'px';el.style.animationDuration=(5+Math.random()*9)+'s';document.body.appendChild(el);el.addEventListener('animationend',()=>el.remove());}
+setInterval(spawnFormula,1000);
+render();
+</script>
+</body>
+</html>
